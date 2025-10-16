@@ -1,6 +1,5 @@
 const { Product, Category } = require('../models');
 
-// GET: Список всех товаров (с категориями)
 const getAllProducts = async (req, res) => {
   try {
     const products = await Product.findAll({ include: Category });
@@ -10,7 +9,6 @@ const getAllProducts = async (req, res) => {
   }
 };
 
-// GET: Товар по ID (с категорией)
 const getProductById = async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id, { include: Category });
@@ -24,23 +22,25 @@ const getProductById = async (req, res) => {
   }
 };
 
-// POST: Добавление товара
 const createProduct = async (req, res) => {
   try {
     const { name, price, description, categoryId } = req.body;
-    const product = await Product.create({ name, price, description, categoryId });
+    const image = req.file ? `/uploads/${req.file.filename}` : null; // Путь к изображению
+    const product = await Product.create({ name, price, description, categoryId, image });
     res.status(201).json(product);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// PUT: Изменение товара по ID
+// PUT: Изменение товара по ID (с изображением)
 const updateProduct = async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id);
     if (product) {
-      await product.update(req.body);
+      const { name, price, description, categoryId } = req.body;
+      const image = req.file ? `/uploads/${req.file.filename}` : product.image; // Новое изображение или старое
+      await product.update({ name, price, description, categoryId, image });
       res.json(product);
     } else {
       res.status(404).json({ error: 'Товар не найден' });
@@ -50,7 +50,6 @@ const updateProduct = async (req, res) => {
   }
 };
 
-// DELETE: Удаление товара по ID
 const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id);
